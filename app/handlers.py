@@ -20,8 +20,8 @@ async def cmd_start(msg: types.Message) -> None:
 Это бот для цитат.\n
 Документация к API: https://quotes.apps.xakep.ga/docs/
 GitHub Repo: https://github.com/gabbhack/quotes-api-bot
-Получить токен: /key
-Перевыпустить токен: /revoke
+Получить токен (только в лс): /key
+Перевыпустить токен (только в лс): /revoke
 Обновить аккаунт (если поменяли имя): /update
 Удалить аккаунт (и цитаты): /delete
 
