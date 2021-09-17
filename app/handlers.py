@@ -72,10 +72,13 @@ async def cmd_add(msg: types.Message) -> None:
     if not text:
         await msg.answer("Используйте так: /add ваша-цитата")
         return
-    
-    user = await api.get_user(msg.from_user.id)
 
-    quote = await api.add_quote(quote_html(text), user.api_key)
+    try:
+        user = await api.create_user(msg.from_user.full_name, msg.from_user.id)
+    except ValidationError:
+        user = await api.get_user(msg.from_user.id)
+
+    quote = await api.add_quote(text, user.api_key)
 
     await msg.answer(f"Цитата {hlink('добавлена', api.make_url(f'quotes/{quote.id}/'))}")
 
