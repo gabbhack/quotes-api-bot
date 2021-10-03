@@ -37,8 +37,8 @@ class Api:
     
     def make_image_url(self, avatar: Optional[str]) -> str:
         if avatar is None:
-            return self.make_url("images/default")
-        return self.make_url(f"images/{avatar}")
+            return self.make_url("images/default.jpg")
+        return self.make_url(f"images/{avatar}.jpg")
 
     async def create_session(self) -> ClientSession:
         if self.session is None or self.session.closed:
