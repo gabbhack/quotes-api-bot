@@ -9,11 +9,13 @@ class User(BaseModel):
     name: str
     telegram_id: int
     api_key: str
+    avatar: Optional[str]
 
 
 class Author(BaseModel):
     id: str
     name: str
+    avatar: Optional[str]
 
 
 class Quote(BaseModel):
@@ -32,15 +34,20 @@ class Api:
 
     def make_url(self, method: str) -> str:
         return f"https://{self.host}/{method}"
+    
+    def make_image_url(self, avatar: Optional[str]) -> str:
+        if avatar is None:
+            return self.make_url("images/default")
+        return self.make_url(f"images/{avatar}")
 
     async def create_session(self) -> ClientSession:
         if self.session is None or self.session.closed:
             self.session = ClientSession()
         return self.session
 
-    async def create_user(self, name: str, telegram_id: int) -> User:
+    async def create_user(self, name: str, telegram_id: int, avatar: Optional[str] = None) -> User:
         session = await self.create_session()
-        request = {"name": name, "telegram_id": telegram_id}
+        request = {"name": name, "telegram_id": telegram_id, "avatar": avatar}
 
         async with session.post(
             self.make_url("internal/users/"), json=request, headers=self.headers
@@ -56,9 +63,9 @@ class Api:
             json = await resp.json()
             return User(**json)
 
-    async def update_user(self, name: str, telegram_id: int) -> User:
+    async def update_user(self, name: str, telegram_id: int, avatar: Optional[str] = None) -> User:
         session = await self.create_session()
-        request = {"name": name, "telegram_id": telegram_id}
+        request = {"name": name, "telegram_id": telegram_id, "avatar": avatar}
 
         async with session.put(
             self.make_url(f"internal/users/{telegram_id}"),

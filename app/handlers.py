@@ -1,4 +1,5 @@
 from contextlib import suppress
+from typing import Optional
 
 from aiogram import types
 from aiogram.types.inline_keyboard import InlineKeyboardButton, InlineKeyboardMarkup
@@ -9,12 +10,20 @@ from aiogram.types.input_message_content import InputTextMessageContent
 from aiogram.utils.markdown import hcode, hlink, quote_html
 from pydantic.error_wrappers import ValidationError
 
-from app.core import api
+from app.core import api, bot
+
+
+async def get_avatar(user_id: int) -> Optional[str]:
+    profile_photos = await bot.get_user_profile_photos(user_id=user_id, limit=1)
+    if profile_photos.photos:
+        return profile_photos.photos[0][-1].file_id
+    return None
 
 
 async def cmd_start(msg: types.Message) -> None:
     with suppress(ValidationError):
-        await api.create_user(msg.from_user.full_name, msg.from_user.id)
+        avatar = await get_avatar(msg.from_user.id)
+        await api.create_user(msg.from_user.full_name, msg.from_user.id, avatar=avatar)
 
     text = """
 Это бот для цитат.\n
@@ -53,7 +62,8 @@ async def cmd_key(msg: types.Message) -> None:
 
 
 async def cmd_update(msg: types.Message) -> None:
-    await api.update_user(msg.from_user.full_name, msg.from_user.id)
+    avatar = await get_avatar(msg.from_user.id)
+    await api.update_user(msg.from_user.full_name, msg.from_user.id, avatar=avatar)
     await msg.answer("Данные аккаунта обновлены")
 
 
@@ -74,7 +84,8 @@ async def cmd_add(msg: types.Message) -> None:
         return
 
     try:
-        user = await api.create_user(msg.from_user.full_name, msg.from_user.id)
+        avatar = await get_avatar(msg.from_user.id)
+        user = await api.create_user(msg.from_user.full_name, msg.from_user.id, avatar=avatar)
     except ValidationError:
         user = await api.get_user(msg.from_user.id)
 
@@ -91,6 +102,7 @@ async def inline_quotes(query: types.InlineQuery) -> None:
             InlineQueryResultArticle(
                 id=i.id,
                 title=f"{i.author.name}:",
+                thumb_url=api.make_image_url(i.author.avatar),
                 description=i.text,
                 input_message_content=InputTextMessageContent(
                     message_text=f"{quote_html(i.text)} (C) {quote_html(i.author.name)}\n\n{hlink('Посмотреть через API', api.make_url(f'quotes/{i.id}/'))}"
